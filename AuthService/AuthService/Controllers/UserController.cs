@@ -68,6 +68,7 @@ namespace AuthService.Controllers
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
+            // En un futuro tenemos que considerar el uso de un secreto más seguro y almacenarlo de forma segura
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("this_is_a_very_secure_key_with_more_than_32_chars"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
