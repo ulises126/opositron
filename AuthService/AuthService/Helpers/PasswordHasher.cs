@@ -5,13 +5,13 @@ public static class PasswordHasher
 {
     public static string HashPassword(string password)
     {
-        // Genera una sal aleatoria
+        // Genero una sal aleatoria
         byte[] salt = RandomNumberGenerator.GetBytes(16);
-        // Deriva el hash usando PBKDF2
+        // Derivo el hash usando PBKDF2
         var hash = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
         byte[] hashBytes = hash.GetBytes(32);
 
-        // Combina sal + hash y conviértelo a base64
+        // Combina sal + hash y convierto a base64
         byte[] hashWithSalt = new byte[48];
         Buffer.BlockCopy(salt, 0, hashWithSalt, 0, 16);
         Buffer.BlockCopy(hashBytes, 0, hashWithSalt, 16, 32);
@@ -32,6 +32,7 @@ public static class PasswordHasher
             if (hashWithSalt[i + 16] != hashBytes[i])
                 return false;
         }
+
         return true;
     }
 }
