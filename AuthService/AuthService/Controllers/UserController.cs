@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using System;
 using System.Security.Claims;
 using System.Text;
+using AuthService.Helpers;
 
 namespace AuthService.Controllers
 {
@@ -21,6 +22,8 @@ namespace AuthService.Controllers
         {
             _context = context;
         }
+
+        #region GET
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
@@ -48,6 +51,10 @@ namespace AuthService.Controllers
             return user;
         }
 
+        #endregion
+
+        #region POST
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -61,7 +68,7 @@ namespace AuthService.Controllers
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("clave-secreta-muy-segura"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("this_is_a_very_secure_key_with_more_than_32_chars"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -77,5 +84,57 @@ namespace AuthService.Controllers
 
             return Ok(new { token });
         }
+
+        [HttpPost("signup")]
+        public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
+        {
+            var userDb = await _context.Users.SingleOrDefaultAsync(u => u.Email == request.Email);
+            if (userDb != null)
+                return Conflict("El usuario ya existe.");
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest("El nombre es obligatorio.");
+
+            if (request.Password.Length < 8)
+                return BadRequest("La contraseña debe tener al menos 8 caracteres.");
+
+            if (IsAtLeast16YearsOld(request.Birthdate) == false)
+                return BadRequest("Debes ser mayor de 16 años.");
+
+            User user = new User
+            {
+                Email = request.Email,
+                Password = PasswordHasher.HashPassword(request.Password),
+                Name = request.Name,
+                Birthdate = request.Birthdate,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            try
+            {
+                await _context.Users.AddAsync(user);
+                await _context.SaveChangesAsync();
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error al crear el usuario: " + ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Métodos privados
+
+        private bool IsAtLeast16YearsOld(DateOnly birthDate)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var minimumBirthDate = today.AddYears(-16);
+
+            return birthDate <= minimumBirthDate;
+        }
+
+        #endregion
+
     }
 }
