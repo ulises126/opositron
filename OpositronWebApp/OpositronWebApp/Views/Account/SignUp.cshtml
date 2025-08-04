@@ -1,0 +1,52 @@
+@model SignUpViewModel
+@{
+    ViewData["Title"] = "Sign Up";
+}
+
+<h2>Registro</h2>
+
+<form asp-action="SignUp" method="post" onsubmit="return validatePasswords();">
+    <div>
+        <label asp-for="Name">Nombre</label>
+        <input asp-for="Name" />
+        <span asp-validation-for="Name"></span>
+    </div>
+    <div>
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" />
+        <span asp-validation-for="Email"></span>
+    </div>
+    <div>
+        <label asp-for="Password">Contraseña</label>
+        <input asp-for="Password" id="Password" />
+        <span asp-validation-for="Password"></span>
+    </div>
+    <div>
+        <label for="ConfirmPassword">Confirmar Contraseña:</label>
+        <input type="password" id="ConfirmPassword" name="ConfirmPassword" required />
+        <span id="passwordError" style="color:red"></span>
+    </div>
+    <div>
+        <label asp-for="BirthDate">Fecha de Nacimiento</label>
+        <input asp-for="BirthDate" />
+        <span asp-validation-for="BirthDate"></span>
+    </div>
+    <button type="submit">Registrarse</button>
+</form>
+
+@section Scripts {
+    <script>
+        function validatePasswords() {
+            var password = document.getElementById('Password').value;
+            var confirmPassword = document.getElementById('ConfirmPassword').value;
+            var errorSpan = document.getElementById('passwordError');
+            if (password !== confirmPassword) {
+                errorSpan.textContent = "Las contraseñas no coinciden.";
+                return false;
+            }
+            errorSpan.textContent = "";
+            return true;
+        }
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
